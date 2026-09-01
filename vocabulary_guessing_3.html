@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vocabulary Guessing - Life in the Countryside</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+  .shake { animation: shake 0.4s ease-in-out; }
+
+  @keyframes popIn {
+    0% { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .pop-in { animation: popIn 0.25s ease-out; }
+
+  @keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in-up { animation: fadeInUp 0.35s ease-out; }
+
+  .progress-fill { transition: width 0.4s ease-in-out; }
+
+  input[type="text"]:focus { outline: none; }
+
+  .img-frame {
+    background: #eef4fb;
+  }
+</style>
+</head>
+<body class="min-h-screen bg-sky-50">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-sky-100 shadow-sm">
+    <div class="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold tracking-widest text-sky-500 uppercase">Grade 8 &middot; Getting Started</p>
+        <h1 class="text-xl md:text-2xl font-extrabold text-slate-800">Vocabulary Guessing <span class="text-emerald-600">&ndash; Life in the Countryside</span></h1>
+      </div>
+      <div class="hidden sm:flex items-center gap-2 bg-sky-50 border border-sky-100 rounded-full px-4 py-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+        <span id="score-label" class="text-sm font-semibold text-slate-600">0 / 10 correct</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-6 py-8">
+
+    <!-- Progress bar -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-semibold text-slate-500">Question <span id="q-index">1</span> / <span id="q-total">10</span></span>
+        <span id="progress-percent" class="text-sm font-semibold text-emerald-600">0%</span>
+      </div>
+      <div class="w-full h-2.5 bg-sky-100 rounded-full overflow-hidden">
+        <div id="progress-bar" class="progress-fill h-full bg-emerald-500 rounded-full" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Question card -->
+    <section id="question-card" class="bg-white rounded-2xl shadow-md border border-sky-100 p-6 md:p-8 fade-in-up">
+
+      <div class="img-frame rounded-xl overflow-hidden border border-sky-100 flex items-center justify-center mb-6" style="aspect-ratio: 16/9;">
+        <img id="question-image" src="" alt="Vocabulary image" class="w-full h-full object-cover" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'flex flex-col items-center justify-center gap-2 text-sky-300 p-6\'><svg xmlns=\'http://www.w3.org/2000/svg\' class=\'w-14 h-14\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\' stroke-width=\'1.5\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 4.5h18M3.75 3v18M20.25 3v18M4.5 3.75h15M4.5 20.25h15\'/><circle cx=\'9\' cy=\'9\' r=\'1.5\'/></svg><p class=\'text-xs font-medium\'>Image unavailable</p></div>'">
+      </div>
+
+      <p id="question-sentence" class="text-lg md:text-xl text-slate-700 leading-relaxed text-center mb-6 font-medium"></p>
+
+      <div class="flex flex-col items-center gap-3">
+        <div class="w-full max-w-sm flex gap-2">
+          <input id="answer-input" type="text" autocomplete="off" placeholder="Type the word here..."
+            class="flex-1 border-2 border-sky-200 rounded-xl px-4 py-3 text-center text-lg font-semibold text-slate-800 bg-sky-50 focus:border-sky-400 focus:bg-white transition-colors" />
+        </div>
+        <button id="check-btn" class="w-full max-w-sm bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-3 rounded-xl shadow-sm transition-colors">
+          Check
+        </button>
+      </div>
+
+      <!-- Feedback -->
+      <div id="feedback-area" class="mt-4 min-h-[2.5rem] text-center"></div>
+
+      <!-- Hint -->
+      <div id="hint-box" class="hidden mt-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-lg px-4 py-3 text-center">
+        <span class="font-semibold">Hint:</span> <span id="hint-text"></span>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Completion Modal -->
+  <div id="completion-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center px-6 z-50">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center pop-in">
+      <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h2 class="text-2xl font-extrabold text-slate-800 mb-1">Well done!</h2>
+      <p class="text-slate-500 mb-4">You completed the vocabulary practice.</p>
+      <p class="text-4xl font-extrabold text-emerald-600 mb-1"><span id="final-score">0</span><span class="text-xl text-slate-400"> / 10</span></p>
+      <p id="final-message" class="text-slate-500 text-sm mb-6">Great job!</p>
+      <button id="retry-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-sm transition-colors">
+        Try Again
+      </button>
+    </div>
+  </div>
+
+<script>
+  // =====================================================================
+  // DATA — Array of Objects (easy to edit / extend)
+  // =====================================================================
+  const questions = [
+    {
+      word: "village",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Bamboo_and_rattan_village_Phu_Vinh,Chuong_My,Ha_Noi,Viet_Nam.jpg?width=800",
+      sentence: "This is a small ______ in the countryside, surrounded by rice fields.",
+      hint: "A small community where people live together in the countryside."
+    },
+    {
+      word: "pig",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Pig.jpg?width=800",
+      sentence: "The farmer keeps a ______ in the backyard for meat.",
+      hint: "A pink farm animal that says 'oink'."
+    },
+    {
+      word: "goldfish",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Goldfishes.jpg?width=800",
+      sentence: "My grandmother has a ______ swimming in a small pond.",
+      hint: "A small orange fish often kept as a pet."
+    },
+    {
+      word: "rice",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Rice_Field.jpg?width=800",
+      sentence: "Farmers grow ______ in the flooded fields every season.",
+      hint: "A staple food crop grown in flooded fields."
+    },
+    {
+      word: "kite",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Kites_flying_on_sky.jpg?width=800",
+      sentence: "Children love flying a ______ in the open field on windy days.",
+      hint: "A toy that flies in the sky, held by a string."
+    },
+    {
+      word: "cow",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Countryside_Cow_(Unsplash).jpg?width=800",
+      sentence: "The ______ gives fresh milk to the farmer every morning.",
+      hint: "A farm animal that gives milk and says 'moo'."
+    },
+    {
+      word: "buffalo",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Village_WaterBuffalo.JPG?width=800",
+      sentence: "The ______ helps farmers plough the rice fields.",
+      hint: "A large, strong farm animal often used to plough fields."
+    },
+    {
+      word: "road",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/%C4%90%C6%B0%E1%BB%9Dng_v%C3%A0o_Tam_C%E1%BB%91c_-_Ninh_B%C3%ACnh.JPG?width=800",
+      sentence: "There is a long ______ leading to the village.",
+      hint: "A path that connects places, used for walking or driving."
+    },
+    {
+      word: "bamboo",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Bamboo_DSCN2465.jpg?width=800",
+      sentence: "The fence is made of ______ from the garden.",
+      hint: "A tall, hollow, green plant used to make fences and furniture."
+    },
+    {
+      word: "garden",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Agriculture_in_Vietnam_with_farmers.jpg?width=800",
+      sentence: "There are many vegetables growing in the ______ behind the house.",
+      hint: "A piece of land near a house used for growing plants and vegetables."
+    }
+  ];
+
+  // =====================================================================
+  // STATE
+  // =====================================================================
+  let currentIndex = 0;
+  let correctCount = 0;
+  let locked = false; // prevents double-submits during auto-advance
+
+  // =====================================================================
+  // DOM REFERENCES
+  // =====================================================================
+  const qIndexEl = document.getElementById('q-index');
+  const qTotalEl = document.getElementById('q-total');
+  const progressBar = document.getElementById('progress-bar');
+  const progressPercent = document.getElementById('progress-percent');
+  const scoreLabel = document.getElementById('score-label');
+
+  const questionCard = document.getElementById('question-card');
+  const questionImage = document.getElementById('question-image');
+  const questionSentence = document.getElementById('question-sentence');
+  const answerInput = document.getElementById('answer-input');
+  const checkBtn = document.getElementById('check-btn');
+  const feedbackArea = document.getElementById('feedback-area');
+  const hintBox = document.getElementById('hint-box');
+  const hintText = document.getElementById('hint-text');
+
+  const completionModal = document.getElementById('completion-modal');
+  const finalScore = document.getElementById('final-score');
+  const finalMessage = document.getElementById('final-message');
+  const retryBtn = document.getElementById('retry-btn');
+
+  qTotalEl.textContent = questions.length;
+
+  // =====================================================================
+  // RENDER
+  // =====================================================================
+  function renderQuestion() {
+    const q = questions[currentIndex];
+
+    locked = false;
+    answerInput.value = '';
+    answerInput.disabled = false;
+    answerInput.classList.remove('border-emerald-500', 'bg-emerald-50', 'border-red-400', 'bg-red-50', 'shake');
+    answerInput.classList.add('border-sky-200', 'bg-sky-50');
+    feedbackArea.innerHTML = '';
+    hintBox.classList.add('hidden');
+    checkBtn.disabled = false;
+    checkBtn.textContent = 'Check';
+
+    questionImage.src = q.image;
+    questionImage.alt = q.word;
+    // build sentence with a clearly marked blank
+    questionSentence.innerHTML = q.sentence.replace(
+      '______',
+      '<span class="inline-block border-b-2 border-dashed border-sky-400 text-sky-400 font-bold px-2">?????</span>'
+    );
+
+    qIndexEl.textContent = currentIndex + 1;
+    const pct = Math.round((currentIndex / questions.length) * 100);
+    progressBar.style.width = pct + '%';
+    progressPercent.textContent = pct + '%';
+    scoreLabel.textContent = correctCount + ' / ' + questions.length + ' correct';
+
+    questionCard.classList.remove('fade-in-up');
+    void questionCard.offsetWidth; // restart animation
+    questionCard.classList.add('fade-in-up');
+
+    answerInput.focus();
+  }
+
+  // =====================================================================
+  // CHECK LOGIC
+  // =====================================================================
+  function normalize(str) {
+    return str.trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
+  function checkAnswer() {
+    if (locked) return;
+    const q = questions[currentIndex];
+    const userAnswer = normalize(answerInput.value);
+
+    if (userAnswer.length === 0) {
+      feedbackArea.innerHTML = '<p class="text-sm font-semibold text-slate-400">Please type an answer first.</p>';
+      return;
+    }
+
+    const isCorrect = userAnswer === normalize(q.word);
+
+    if (isCorrect) {
+      locked = true;
+      correctCount++;
+      answerInput.classList.remove('border-sky-200', 'bg-sky-50', 'border-red-400', 'bg-red-50');
+      answerInput.classList.add('border-emerald-500', 'bg-emerald-50');
+      answerInput.disabled = true;
+      checkBtn.disabled = true;
+      hintBox.classList.add('hidden');
+      feedbackArea.innerHTML =
+        '<p class="flex items-center justify-center gap-2 text-emerald-600 font-bold text-lg pop-in">' +
+        '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">' +
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg> Correct!</p>';
+      scoreLabel.textContent = correctCount + ' / ' + questions.length + ' correct';
+
+      setTimeout(() => {
+        currentIndex++;
+        if (currentIndex >= questions.length) {
+          showCompletion();
+        } else {
+          renderQuestion();
+        }
+      }, 1600);
+    } else {
+      answerInput.classList.remove('border-sky-200', 'bg-sky-50', 'border-emerald-500', 'bg-emerald-50');
+      answerInput.classList.add('border-red-400', 'bg-red-50');
+      answerInput.classList.remove('shake');
+      void answerInput.offsetWidth;
+      answerInput.classList.add('shake');
+
+      feedbackArea.innerHTML = '<p class="text-red-500 font-bold">Not quite, try again!</p>';
+      hintText.textContent = q.hint;
+      hintBox.classList.remove('hidden');
+    }
+  }
+
+  // =====================================================================
+  // COMPLETION
+  // =====================================================================
+  function showCompletion() {
+    progressBar.style.width = '100%';
+    progressPercent.textContent = '100%';
+    finalScore.textContent = correctCount;
+
+    let msg = 'Great effort — keep practicing!';
+    if (correctCount === questions.length) msg = 'Perfect score! You know all the vocabulary. 🎉';
+    else if (correctCount >= questions.length * 0.7) msg = 'Great job! Just a little more practice.';
+
+    finalMessage.textContent = msg;
+    completionModal.classList.remove('hidden');
+  }
+
+  function resetGame() {
+    currentIndex = 0;
+    correctCount = 0;
+    completionModal.classList.add('hidden');
+    renderQuestion();
+  }
+
+  // =====================================================================
+  // EVENTS
+  // =====================================================================
+  checkBtn.addEventListener('click', checkAnswer);
+  answerInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') checkAnswer();
+  });
+  retryBtn.addEventListener('click', resetGame);
+
+  // =====================================================================
+  // INIT
+  // =====================================================================
+  renderQuestion();
+</script>
+
+</body>
+</html>
